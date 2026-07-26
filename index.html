@@ -142,10 +142,11 @@
   .history-item .hi-del { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
   .history-item .hi-del:hover { color: #e53e3e; background: #fff0f0; }
   .history-empty { color: var(--text2); font-size: 13px; text-align: center; padding: 40px 16px; }
-  .history-back { display: flex; flex-direction: column; gap: 2px; padding: 4px 4px 12px; cursor: pointer; border-bottom: 0.5px solid var(--border); margin-bottom: 4px; }
-  .history-back span:first-child { font-size: 12px; color: var(--text2); }
-  .history-back:hover span:first-child { color: var(--text); }
-  .history-back-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .history-filters { display: flex; gap: 8px; padding: 14px 16px; overflow-x: auto; flex-shrink: 0; border-bottom: 0.5px solid var(--border); -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .history-filters::-webkit-scrollbar { display: none; }
+  .filter-pill { flex-shrink: 0; padding: 7px 16px; border-radius: 100px; font-size: 13px; font-weight: 600; background: var(--bg2); color: var(--text2); border: 0.5px solid var(--border2); cursor: pointer; white-space: nowrap; transition: all 0.15s; font-family: inherit; }
+  .filter-pill:hover { background: var(--bg3); color: var(--text); }
+  .filter-pill.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 
   /* Passcode gate */
   .gate-overlay { position: fixed; inset: 0; background: var(--bg3); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -299,6 +300,7 @@
     <h2>Saved invoices</h2>
     <button onclick="closeHistory()" title="Close">&#x2715;</button>
   </div>
+  <div class="history-filters" id="history-filters"></div>
   <div class="history-list" id="history-list"></div>
 </div>
 
@@ -474,7 +476,7 @@ function setClientName(name) {
 // Every "Save as PDF" always creates a brand new saved invoice — loading a
 // saved invoice and editing it never overwrites the original.
 let history = null; // null = not loaded / load error
-let historyFilter = null; // null = show client groups; 'ALL' or 'OTHERS' or a client name
+let historyFilter = 'ALL'; // 'ALL', 'OTHERS', or a client name
 
 function snapshotForm() {
   return {
@@ -525,54 +527,47 @@ async function loadHistoryData() {
 }
 
 function renderHistoryView() {
+  const filters = document.getElementById('history-filters');
   const list = document.getElementById('history-list');
   if (history === null) {
+    filters.innerHTML = '';
     list.innerHTML = '<div class="history-empty">Could not load saved invoices.<br>Check your connection.</div>';
     return;
   }
   if (history.length === 0) {
+    filters.innerHTML = '';
     list.innerHTML = '<div class="history-empty">No saved invoices yet.<br>Export a PDF to save one here.</div>';
     return;
   }
-  list.innerHTML = '';
-  if (historyFilter === null) {
-    renderGroupList(list);
-  } else {
-    renderInvoiceList(list);
-  }
+  renderFilterPills(filters);
+  renderInvoiceList(list);
 }
 
-function renderGroupList(list) {
+function renderFilterPills(filters) {
   const clientNames = [...new Set(history.map(h => h.toName).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   const othersCount = history.filter(h => !h.toName).length;
 
-  const groups = [{ value: 'ALL', label: 'All invoices', count: history.length }];
-  clientNames.forEach(name => {
-    groups.push({ value: name, label: name, count: history.filter(h => h.toName === name).length });
-  });
-  if (othersCount > 0) groups.push({ value: 'OTHERS', label: 'Others (no client)', count: othersCount });
+  const pills = [{ value: 'ALL', label: 'All' }];
+  clientNames.forEach(name => pills.push({ value: name, label: name }));
+  if (othersCount > 0) pills.push({ value: 'OTHERS', label: 'Others' });
 
-  groups.forEach(g => {
-    const div = document.createElement('div');
-    div.className = 'history-item';
-    div.innerHTML = `<div class="hi-top"><span>${g.label.replace(/</g, '&lt;')}</span><span>${g.count}</span></div>`;
-    div.addEventListener('click', () => { historyFilter = g.value; renderHistoryView(); });
-    list.appendChild(div);
+  filters.innerHTML = '';
+  pills.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-pill' + (historyFilter === p.value ? ' active' : '');
+    btn.textContent = p.label;
+    btn.addEventListener('click', () => { historyFilter = p.value; renderHistoryView(); });
+    filters.appendChild(btn);
   });
 }
 
 function renderInvoiceList(list) {
-  let filtered, title;
-  if (historyFilter === 'ALL') { filtered = history; title = 'All invoices'; }
-  else if (historyFilter === 'OTHERS') { filtered = history.filter(h => !h.toName); title = 'Others (no client)'; }
-  else { filtered = history.filter(h => h.toName === historyFilter); title = historyFilter; }
+  let filtered;
+  if (historyFilter === 'ALL') { filtered = history; }
+  else if (historyFilter === 'OTHERS') { filtered = history.filter(h => !h.toName); }
+  else { filtered = history.filter(h => h.toName === historyFilter); }
 
-  const back = document.createElement('div');
-  back.className = 'history-back';
-  back.innerHTML = `<span>&#8592; All clients</span><span class="history-back-title">${title.replace(/</g, '&lt;')}</span>`;
-  back.addEventListener('click', () => { historyFilter = null; renderHistoryView(); });
-  list.appendChild(back);
-
+  list.innerHTML = '';
   filtered.forEach(h => {
     const sub = (h.rows || []).reduce((s, r) => s + r.qty * r.rate, 0);
     const tax = sub * (parseFloat(h.taxRate) || 0) / 100;
@@ -627,7 +622,7 @@ async function deleteHistory(id) {
 async function openHistory() {
   document.getElementById('history-panel').classList.add('open');
   document.getElementById('history-overlay').classList.add('open');
-  historyFilter = null;
+  historyFilter = 'ALL';
   await loadHistoryData();
   renderHistoryView();
 }
