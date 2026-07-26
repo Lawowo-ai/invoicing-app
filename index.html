@@ -142,6 +142,17 @@
   .history-item .hi-del { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
   .history-item .hi-del:hover { color: #e53e3e; background: #fff0f0; }
   .history-empty { color: var(--text2); font-size: 13px; text-align: center; padding: 40px 16px; }
+
+  /* Passcode gate */
+  .gate-overlay { position: fixed; inset: 0; background: var(--bg3); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .gate-overlay.hidden { display: none; }
+  .gate-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .gate-card h2 { font-size: 18px; font-weight: 600; }
+  .gate-card p { font-size: 13px; color: var(--text2); margin-top: -6px; }
+  .gate-card input { padding: 10px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--bg2); color: var(--text); text-align: center; }
+  .gate-card input:focus { outline: none; border-color: var(--text3); }
+  .gate-card button { padding: 10px; background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .gate-error { color: #e53e3e; font-size: 13px; display: none; }
   .desc-col { min-width: 180px; }
   .qty-col { width: 55px; }
   .rate-col { width: 120px; }
@@ -289,7 +300,119 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="gate-overlay" id="gate-overlay">
+  <div class="gate-card">
+    <h2>Team invoice app</h2>
+    <p>Enter the shared passcode to continue.</p>
+    <input type="password" id="gate-input" placeholder="Passcode" autocomplete="off" />
+    <div class="gate-error" id="gate-error">Incorrect passcode, try again.</div>
+    <button onclick="checkPasscode()">Unlock</button>
+  </div>
+</div>
+
 <script>
+// ── Passcode gate ────────────────────────────────────────
+const APP_PASSCODE = 'hong kong';
+
+function checkPasscode() {
+  const input = document.getElementById('gate-input');
+  const val = input.value.trim().toLowerCase();
+  if (val === APP_PASSCODE) {
+    localStorage.setItem('invoiceAppUnlocked', '1');
+    document.getElementById('gate-overlay').classList.add('hidden');
+  } else {
+    document.getElementById('gate-error').style.display = 'block';
+    input.select();
+  }
+}
+
+if (localStorage.getItem('invoiceAppUnlocked') === '1') {
+  document.getElementById('gate-overlay').classList.add('hidden');
+}
+document.getElementById('gate-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPasscode();
+});
+
+// ── Supabase (shared storage for saved invoices) ──────────
+const SUPABASE_URL = 'https://czjqchylxrufoyidloej.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_M5aRhFnEXuqDo6HvGtgs-A_0r87E2Im';
+const SB_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json',
+};
+
+async function sbFetchInvoices() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?select=*&order=saved_at.desc`, { headers: SB_HEADERS });
+  if (!res.ok) throw new Error('Failed to load invoices');
+  return res.json();
+}
+async function sbInsertInvoice(row) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify(row),
+  });
+  if (!res.ok) throw new Error('Failed to save invoice');
+  const data = await res.json();
+  return data[0];
+}
+async function sbUpdateInvoice(id, row) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify(row),
+  });
+  if (!res.ok) throw new Error('Failed to update invoice');
+  const data = await res.json();
+  return data[0];
+}
+async function sbDeleteInvoice(id) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: SB_HEADERS,
+  });
+  if (!res.ok) throw new Error('Failed to delete invoice');
+}
+
+function snapshotToRow(snap) {
+  return {
+    inv_number: snap.invNumber,
+    inv_date: snap.invDate || null,
+    due_date: snap.dueDate || null,
+    from_name: snap.fromName,
+    from_email: snap.fromEmail,
+    from_addr: snap.fromAddr,
+    to_name: snap.toName,
+    to_email: snap.toEmail,
+    to_addr: snap.toAddr,
+    tax_rate: parseFloat(snap.taxRate) || 0,
+    discount: parseFloat(snap.discount) || 0,
+    notes: snap.notes,
+    rows: snap.rows,
+    updated_at: new Date().toISOString(),
+  };
+}
+function rowToSnapshot(row) {
+  return {
+    id: row.id,
+    invNumber: row.inv_number,
+    invDate: row.inv_date,
+    dueDate: row.due_date,
+    fromName: row.from_name,
+    fromEmail: row.from_email,
+    fromAddr: row.from_addr,
+    toName: row.to_name,
+    toEmail: row.to_email,
+    toAddr: row.to_addr,
+    taxRate: row.tax_rate,
+    discount: row.discount,
+    notes: row.notes,
+    rows: row.rows || [],
+    savedAt: row.saved_at,
+  };
+}
+
 // Default product catalogue
 let catalogue = [
   { id: 1, name: 'Consulting (per hour)', price: 500000 },
@@ -353,14 +476,9 @@ function setClientName(name) {
   }
 }
 
-// ── Invoice history (saved on PDF export, stored in this browser) ──
+// ── Invoice history (saved on PDF export, shared via Supabase) ──
 let history = [];
-try { history = JSON.parse(localStorage.getItem('invoiceHistory') || '[]'); } catch (e) { history = []; }
 let loadedInvoiceId = null;
-
-function persistHistory() {
-  localStorage.setItem('invoiceHistory', JSON.stringify(history));
-}
 
 function snapshotForm() {
   return {
@@ -380,25 +498,32 @@ function snapshotForm() {
   };
 }
 
-function saveToHistory() {
+async function saveToHistory() {
   const snap = snapshotForm();
-  const now = new Date().toISOString();
-  if (loadedInvoiceId) {
-    const idx = history.findIndex(h => h.id === loadedInvoiceId);
-    if (idx !== -1) {
-      history[idx] = { ...history[idx], ...snap, savedAt: now };
-      persistHistory();
-      return;
+  const rowData = snapshotToRow(snap);
+  try {
+    if (loadedInvoiceId) {
+      await sbUpdateInvoice(loadedInvoiceId, rowData);
+    } else {
+      const id = 'inv_' + Date.now();
+      const inserted = await sbInsertInvoice({ id, ...rowData, saved_at: new Date().toISOString() });
+      loadedInvoiceId = inserted.id;
     }
+  } catch (e) {
+    showToast('Could not save to shared history — check your connection');
   }
-  const id = 'inv_' + Date.now();
-  history.unshift({ id, savedAt: now, ...snap });
-  loadedInvoiceId = id;
-  persistHistory();
 }
 
-function renderHistory() {
+async function renderHistory() {
   const list = document.getElementById('history-list');
+  list.innerHTML = '<div class="history-empty">Loading…</div>';
+  try {
+    const dbRows = await sbFetchInvoices();
+    history = dbRows.map(rowToSnapshot);
+  } catch (e) {
+    list.innerHTML = '<div class="history-empty">Could not load saved invoices.<br>Check your connection.</div>';
+    return;
+  }
   list.innerHTML = '';
   if (history.length === 0) {
     list.innerHTML = '<div class="history-empty">No saved invoices yet.<br>Export a PDF to save one here.</div>';
@@ -446,17 +571,21 @@ function loadHistory(id) {
   showToast('Loaded ' + (h.invNumber || 'invoice'));
 }
 
-function deleteHistory(id) {
-  history = history.filter(h => h.id !== id);
+async function deleteHistory(id) {
+  try {
+    await sbDeleteInvoice(id);
+  } catch (e) {
+    showToast('Could not delete — check your connection');
+    return;
+  }
   if (loadedInvoiceId === id) loadedInvoiceId = null;
-  persistHistory();
   renderHistory();
 }
 
 function openHistory() {
-  renderHistory();
   document.getElementById('history-panel').classList.add('open');
   document.getElementById('history-overlay').classList.add('open');
+  renderHistory();
 }
 function closeHistory() {
   document.getElementById('history-panel').classList.remove('open');
@@ -638,7 +767,7 @@ function recalc() {
 }
 
 // ── PDF Export ───────────────────────────────────────────
-function exportPDF() {
+async function exportPDF() {
   if (typeof window.jspdf === 'undefined') { showToast('PDF library loading, try again…'); return; }
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -736,8 +865,8 @@ function exportPDF() {
 
   const filename = (val('inv-number') || 'invoice') + '.pdf';
   doc.save(filename);
-  saveToHistory();
-  showToast('Downloaded ' + filename + ' · saved to history');
+  await saveToHistory();
+  showToast('Downloaded ' + filename + ' · saved to shared history');
 }
 
 // ── Init ─────────────────────────────────────────────────
