@@ -6,7 +6,7 @@
 <title>Invoice App</title>
 <link rel="manifest" href="manifest.json" />
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAm0lEQVR4nGMUFBRkoCVgoqnpoxYQA1jwyD179gS/5pcvn4uLSzIwMEhJyeBSg9MHBE2H24FfMRWCCGIHDS3Abwe+OCAIIBGAHxCwYNGiJQSNiIuLwSM79PMBzS1gxFWaEpkP4ABXXhv6kUzzIBr6qWjoW0AgmaJFHSTmsQriAgPtA6yuIykFD1wk46nHSVKMMydTCwz9fDD0LQAAG5gs57jsAbEAAAAASUVORK5CYII=" />
-<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADLUlEQVR4nO3dQW7bVhRAUaboBjwKGnRpQRYXdGlFAu+iAwMdKL2NItnie8k5Y0v8/L4iZZH6fvf09HTAf/nt7AEwlzhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iD9fvYA/s+XL3+fPYTbPT9/ff/+j+/+2IcPfz5gMLd5N/OL1KuzePH8/PU4jmv6OKYmMvG08hOU8a+XRL5r5i6Pi2PmNN1jbx+z4hg4Qa9iaR+z4viJXdnHKIPimPa6eXXX9DFqEgbF8SvYdfwQx6Mt6kMcJ9jShzjOsaIPcZxmfh/iONPwPsRxssl9iON8Y/sQxwgz+xDHFAP7EMcg0/oQxyyj+hh9m+BqV94DNpkjB0kcJHGQxEESB0kcJHGQxEESB2nxJ6SfP/919hCu8unTx7OHcKOtR44tZRyrhnphaxw8gDhI4iBtjWPRu7xFQ70waGWfUd8hPtGcVX62Hjl4AHGQxEESB0kcJHGQxEESB8kl+ze39xPSrUeOLWUcq4Z6YWscPIA4SFvjWHQiXzTUC67KjuOqLAuIgyQOkjhI4iCJgyQOkjhIrsq+ub2fkG49cmwp41g11Atb4+ABxEHaGseiE/mioV5wVXYcV2VZQBwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHafFSk8d9i+DcsJDQDZtbvVzR4iPHncsj/ejDb9vcnDWcbrA1jleZ9Ouf5J7N7e1jaxw8gDhIW+N4lTd61z/JPZvb+550axzH3ZP+ow+/bXN7yzi2/yn74Klf/Zu+weIjB29NHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdpUBx7b6d7RaMmYVAcTDMrjlGvm8ebtvuz4jjmTdDDDNzxcXEcI6fprc3c5UH/y/5bv8JteTOzeDE6Ds418bTCEOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYP0D+XBn8WftlBoAAAAAElFTkSuQmCC" />
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADLUlEQVR4nO3dQW7bVhRAUaboBjwKGnRpQRYXdGlFAu+iAwMdKL2NItnie8k5Y0v8/L4iZZH6fvf09HTAf/nt7AEwlzhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iD9fvYA/s+XL3+fPYTbPT9/ff/+j+/+2IcPfz5gMLd5N/OL1KuzePH8/PU4jmv6OKYmMvG08hOU8a+XRL5r5i6Pi2PmNN1jbx+z4hg4Qa9iaR+z4viJXdnHKIPimPa6eXXX9DFqEgbF8SvYdfwQx6Mt6kMcJ9jShzjOsaIPcZxmfh/iONPwPsRxssl9iON8Y/sQxwgz+xDHFAP7EMcg0/oQxyyj+hh9m+BqV94DNpkjB0kcJHGQxEESB0kcJHGQxEESB2nxJ6SfP/919hCu8unTx7OHcKOtR44tZRyrhnphaxw8gDhI4iBtjWPRu7xFQ70waGWfUd8hPtGcVX62Hjl4AHGQxEESB0kcJHGQxEESB8kl+ze39xPSrUeOLWUcq4Z6YWscPIA4SFvjWHQiXzTUC67KjuOqLAuIgyQOkjhI4iCJgyQOkjhIrsq+ub2fkG49cmwp41g11Atb4+ABxEHaGseiE/mioV5wVXYcV2VZQBwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHafFSk8d9i+DcsJDQDZtbvVzR4iPHncsj/ejDb9vcnDWcbrA1jleZ9Ouf5J7N7e1jaxw8gDhIW+N4lTd61z/JPZvb+550axzH3ZP+ow+/bXN7yzi2/yn74Klf/Zu+weIjB29NHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdpUBx7b6d7RaMmYVAcTDMrjlGvm8ebtvuz4jjmTdDDDNzxcXEcI6fprc3c5UH/y/5bv8JteTOzeDE6Ds418bTCEOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYP0D+XBn8WftlBoAAAAAElFTkSuQmCC" />
 <meta name="theme-color" content="#111111" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -123,6 +123,25 @@
 
   .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; z-index: 200; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis; }
   .toast.show { opacity: 1; }
+
+  /* History panel */
+  .history-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 140; }
+  .history-overlay.open { display: block; }
+  .history-panel { position: fixed; top: 0; right: 0; height: 100vh; width: 340px; max-width: 88vw; background: var(--bg); border-left: 0.5px solid var(--border); box-shadow: -8px 0 30px rgba(0,0,0,0.2); transform: translateX(100%); transition: transform 0.25s ease; z-index: 150; display: flex; flex-direction: column; }
+  .history-panel.open { transform: translateX(0); }
+  .history-header { padding: 18px 20px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .history-header h2 { font-size: 16px; font-weight: 600; }
+  .history-header button { background: none; border: none; cursor: pointer; color: var(--text2); font-size: 18px; padding: 4px 8px; border-radius: 5px; }
+  .history-header button:hover { background: var(--bg2); color: var(--text); }
+  .history-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .history-item { padding: 12px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; background: var(--bg2); position: relative; transition: border-color 0.15s; }
+  .history-item:hover { border-color: var(--text3); }
+  .history-item .hi-top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 4px; padding-right: 20px; }
+  .history-item .hi-sub { font-size: 12px; color: var(--text2); display: flex; justify-content: space-between; gap: 8px; }
+  .history-item .hi-sub span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-item .hi-del { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
+  .history-item .hi-del:hover { color: #e53e3e; background: #fff0f0; }
+  .history-empty { color: var(--text2); font-size: 13px; text-align: center; padding: 40px 16px; }
   .desc-col { min-width: 180px; }
   .qty-col { width: 55px; }
   .rate-col { width: 120px; }
@@ -148,6 +167,8 @@
     <h1>Invoice</h1>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <span class="badge">Draft</span>
+      <button class="manage-btn" onclick="newInvoice()">+ New</button>
+      <button class="manage-btn" onclick="openHistory()">History</button>
       <button class="manage-btn" onclick="openModal()">&#9881; Manage items</button>
       <button class="save-btn" onclick="exportPDF()">&#8659; Save as PDF</button>
     </div>
@@ -174,7 +195,19 @@
     <div class="card" style="margin-bottom:0">
       <div class="card-title">Bill to</div>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="field"><label>Client name</label><input type="text" id="to-name" placeholder="Client name" /></div>
+        <div class="field">
+          <label>Client name</label>
+          <select id="to-name-select" onchange="onClientSelectChange(this.value)">
+            <option value="">Select client…</option>
+            <option value="PT. American Standard Indonesia">PT. American Standard Indonesia</option>
+            <option value="PT. Panata Jaya Mandiri">PT. Panata Jaya Mandiri</option>
+            <option value="PT. Kobin Keramik Industri">PT. Kobin Keramik Industri</option>
+            <option value="PT. Cahayaputra Asa Keramik Tbk.">PT. Cahayaputra Asa Keramik Tbk.</option>
+            <option value="PT. Selamat Sempurna Tbk.">PT. Selamat Sempurna Tbk.</option>
+            <option value="custom">— Custom client —</option>
+          </select>
+          <input type="text" id="to-name" placeholder="Client name" style="display:none;margin-top:6px" />
+        </div>
         <div class="field"><label>Email</label><input type="email" id="to-email" placeholder="client@example.com" /></div>
         <div class="field"><label>Address</label><textarea id="to-addr" rows="2" placeholder="Street, City, Country"></textarea></div>
       </div>
@@ -245,6 +278,15 @@
   </div>
 </div>
 
+<div class="history-overlay" id="history-overlay" onclick="closeHistory()"></div>
+<div class="history-panel" id="history-panel">
+  <div class="history-header">
+    <h2>Saved invoices</h2>
+    <button onclick="closeHistory()" title="Close">&#x2715;</button>
+  </div>
+  <div class="history-list" id="history-list"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -270,6 +312,180 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Client dropdown ──────────────────────────────────────
+const knownClients = [
+  'PT. American Standard Indonesia',
+  'PT. Panata Jaya Mandiri',
+  'PT. Kobin Keramik Industri',
+  'PT. Cahayaputra Asa Keramik Tbk.',
+  'PT. Selamat Sempurna Tbk.',
+];
+
+function onClientSelectChange(value) {
+  const input = document.getElementById('to-name');
+  if (value === 'custom') {
+    input.value = '';
+    input.style.display = 'block';
+    input.focus();
+  } else {
+    input.value = value;
+    input.style.display = 'none';
+  }
+}
+
+function setClientName(name) {
+  const select = document.getElementById('to-name-select');
+  const input = document.getElementById('to-name');
+  if (name && knownClients.includes(name)) {
+    select.value = name;
+    input.value = name;
+    input.style.display = 'none';
+  } else if (name) {
+    select.value = 'custom';
+    input.value = name;
+    input.style.display = 'block';
+  } else {
+    select.value = '';
+    input.value = '';
+    input.style.display = 'none';
+  }
+}
+
+// ── Invoice history (saved on PDF export, stored in this browser) ──
+let history = [];
+try { history = JSON.parse(localStorage.getItem('invoiceHistory') || '[]'); } catch (e) { history = []; }
+let loadedInvoiceId = null;
+
+function persistHistory() {
+  localStorage.setItem('invoiceHistory', JSON.stringify(history));
+}
+
+function snapshotForm() {
+  return {
+    invNumber: val('inv-number'),
+    invDate: val('inv-date'),
+    dueDate: val('due-date'),
+    fromName: val('from-name'),
+    fromEmail: val('from-email'),
+    fromAddr: val('from-addr'),
+    toName: val('to-name'),
+    toEmail: val('to-email'),
+    toAddr: val('to-addr'),
+    taxRate: val('tax-rate'),
+    discount: val('discount'),
+    notes: val('notes'),
+    rows: rows.map(r => ({ ...r })),
+  };
+}
+
+function saveToHistory() {
+  const snap = snapshotForm();
+  const now = new Date().toISOString();
+  if (loadedInvoiceId) {
+    const idx = history.findIndex(h => h.id === loadedInvoiceId);
+    if (idx !== -1) {
+      history[idx] = { ...history[idx], ...snap, savedAt: now };
+      persistHistory();
+      return;
+    }
+  }
+  const id = 'inv_' + Date.now();
+  history.unshift({ id, savedAt: now, ...snap });
+  loadedInvoiceId = id;
+  persistHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  if (history.length === 0) {
+    list.innerHTML = '<div class="history-empty">No saved invoices yet.<br>Export a PDF to save one here.</div>';
+    return;
+  }
+  history.forEach(h => {
+    const sub = (h.rows || []).reduce((s, r) => s + r.qty * r.rate, 0);
+    const tax = sub * (parseFloat(h.taxRate) || 0) / 100;
+    const grand = Math.max(0, sub + tax - (parseFloat(h.discount) || 0));
+    const dateLabel = h.savedAt ? new Date(h.savedAt).toLocaleDateString('id-ID') : '';
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `
+      <button class="hi-del" title="Delete">&#x2715;</button>
+      <div class="hi-top"><span>${(h.invNumber || 'Untitled').replace(/</g, '&lt;')}</span></div>
+      <div class="hi-sub"><span>${(h.toName || 'No client').replace(/</g, '&lt;')}</span><span>${fmtRp(grand)}</span></div>
+      <div class="hi-sub"><span>${dateLabel}</span></div>`;
+    div.querySelector('.hi-del').addEventListener('click', (e) => { e.stopPropagation(); deleteHistory(h.id); });
+    div.addEventListener('click', () => loadHistory(h.id));
+    list.appendChild(div);
+  });
+}
+
+function loadHistory(id) {
+  const h = history.find(x => x.id === id);
+  if (!h) return;
+  loadedInvoiceId = id;
+  document.getElementById('inv-number').value = h.invNumber || '';
+  document.getElementById('inv-date').value = h.invDate || '';
+  document.getElementById('due-date').value = h.dueDate || '';
+  document.getElementById('from-name').value = h.fromName || '';
+  document.getElementById('from-email').value = h.fromEmail || '';
+  document.getElementById('from-addr').value = h.fromAddr || '';
+  setClientName(h.toName || '');
+  document.getElementById('to-email').value = h.toEmail || '';
+  document.getElementById('to-addr').value = h.toAddr || '';
+  document.getElementById('tax-rate').value = h.taxRate || 0;
+  document.getElementById('discount').value = h.discount || 0;
+  document.getElementById('notes').value = h.notes || '';
+  rows = (h.rows || []).map(r => ({ ...r }));
+  rowId = rows.reduce((m, r) => Math.max(m, r.id), 0);
+  renderAllRows();
+  recalc();
+  closeHistory();
+  showToast('Loaded ' + (h.invNumber || 'invoice'));
+}
+
+function deleteHistory(id) {
+  history = history.filter(h => h.id !== id);
+  if (loadedInvoiceId === id) loadedInvoiceId = null;
+  persistHistory();
+  renderHistory();
+}
+
+function openHistory() {
+  renderHistory();
+  document.getElementById('history-panel').classList.add('open');
+  document.getElementById('history-overlay').classList.add('open');
+}
+function closeHistory() {
+  document.getElementById('history-panel').classList.remove('open');
+  document.getElementById('history-overlay').classList.remove('open');
+}
+
+function setDefaultDates() {
+  const today = new Date();
+  const due = new Date(today); due.setDate(due.getDate() + 30);
+  document.getElementById('inv-date').value = iso(today);
+  document.getElementById('due-date').value = iso(due);
+}
+
+function newInvoice() {
+  loadedInvoiceId = null;
+  document.getElementById('inv-number').value = 'INV-001';
+  setDefaultDates();
+  document.getElementById('from-name').value = '';
+  document.getElementById('from-email').value = '';
+  document.getElementById('from-addr').value = '';
+  setClientName('');
+  document.getElementById('to-email').value = '';
+  document.getElementById('to-addr').value = '';
+  document.getElementById('tax-rate').value = 0;
+  document.getElementById('discount').value = 0;
+  document.getElementById('notes').value = '';
+  rows = []; rowId = 0;
+  addRow();
+  showToast('Started a new invoice');
 }
 
 // ── Catalogue modal ──────────────────────────────────────
@@ -520,15 +736,13 @@ function exportPDF() {
 
   const filename = (val('inv-number') || 'invoice') + '.pdf';
   doc.save(filename);
-  showToast('Downloaded ' + filename);
+  saveToHistory();
+  showToast('Downloaded ' + filename + ' · saved to history');
 }
 
 // ── Init ─────────────────────────────────────────────────
-const today = new Date();
 const iso = d => d.toISOString().split('T')[0];
-const due = new Date(today); due.setDate(due.getDate() + 30);
-document.getElementById('inv-date').value = iso(today);
-document.getElementById('due-date').value = iso(due);
+setDefaultDates();
 addRow();
 
 document.getElementById('new-prod-name').addEventListener('keydown', e => {
