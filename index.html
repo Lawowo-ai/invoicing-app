@@ -142,6 +142,10 @@
   .history-item .hi-del { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--text3); cursor: pointer; font-size: 14px; padding: 2px 6px; border-radius: 4px; }
   .history-item .hi-del:hover { color: #e53e3e; background: #fff0f0; }
   .history-empty { color: var(--text2); font-size: 13px; text-align: center; padding: 40px 16px; }
+  .history-back { display: flex; flex-direction: column; gap: 2px; padding: 4px 4px 12px; cursor: pointer; border-bottom: 0.5px solid var(--border); margin-bottom: 4px; }
+  .history-back span:first-child { font-size: 12px; color: var(--text2); }
+  .history-back:hover span:first-child { color: var(--text); }
+  .history-back-title { font-size: 15px; font-weight: 600; color: var(--text); }
 
   /* Passcode gate */
   .gate-overlay { position: fixed; inset: 0; background: var(--bg3); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 16px; }
@@ -357,16 +361,6 @@ async function sbInsertInvoice(row) {
   const data = await res.json();
   return data[0];
 }
-async function sbUpdateInvoice(id, row) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?id=eq.${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
-    body: JSON.stringify(row),
-  });
-  if (!res.ok) throw new Error('Failed to update invoice');
-  const data = await res.json();
-  return data[0];
-}
 async function sbDeleteInvoice(id) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/invoices?id=eq.${encodeURIComponent(id)}`, {
     method: 'DELETE',
@@ -477,8 +471,10 @@ function setClientName(name) {
 }
 
 // ── Invoice history (saved on PDF export, shared via Supabase) ──
-let history = [];
-let loadedInvoiceId = null;
+// Every "Save as PDF" always creates a brand new saved invoice — loading a
+// saved invoice and editing it never overwrites the original.
+let history = null; // null = not loaded / load error
+let historyFilter = null; // null = show client groups; 'ALL' or 'OTHERS' or a client name
 
 function snapshotForm() {
   return {
@@ -501,46 +497,93 @@ function snapshotForm() {
 async function saveToHistory() {
   const snap = snapshotForm();
   const rowData = snapshotToRow(snap);
+  const id = 'inv_' + Date.now();
   try {
-    if (loadedInvoiceId) {
-      await sbUpdateInvoice(loadedInvoiceId, rowData);
-    } else {
-      const id = 'inv_' + Date.now();
-      const inserted = await sbInsertInvoice({ id, ...rowData, saved_at: new Date().toISOString() });
-      loadedInvoiceId = inserted.id;
-    }
+    await sbInsertInvoice({ id, ...rowData, saved_at: new Date().toISOString() });
   } catch (e) {
     showToast('Could not save to shared history — check your connection');
   }
 }
 
-async function renderHistory() {
+function fmtHK(iso) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleString('en-GB', {
+    timeZone: 'Asia/Hong_Kong', day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }) + ' HKT';
+}
+
+async function loadHistoryData() {
   const list = document.getElementById('history-list');
   list.innerHTML = '<div class="history-empty">Loading…</div>';
   try {
     const dbRows = await sbFetchInvoices();
     history = dbRows.map(rowToSnapshot);
   } catch (e) {
+    history = null;
+  }
+}
+
+function renderHistoryView() {
+  const list = document.getElementById('history-list');
+  if (history === null) {
     list.innerHTML = '<div class="history-empty">Could not load saved invoices.<br>Check your connection.</div>';
     return;
   }
-  list.innerHTML = '';
   if (history.length === 0) {
     list.innerHTML = '<div class="history-empty">No saved invoices yet.<br>Export a PDF to save one here.</div>';
     return;
   }
-  history.forEach(h => {
+  list.innerHTML = '';
+  if (historyFilter === null) {
+    renderGroupList(list);
+  } else {
+    renderInvoiceList(list);
+  }
+}
+
+function renderGroupList(list) {
+  const clientNames = [...new Set(history.map(h => h.toName).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const othersCount = history.filter(h => !h.toName).length;
+
+  const groups = [{ value: 'ALL', label: 'All invoices', count: history.length }];
+  clientNames.forEach(name => {
+    groups.push({ value: name, label: name, count: history.filter(h => h.toName === name).length });
+  });
+  if (othersCount > 0) groups.push({ value: 'OTHERS', label: 'Others (no client)', count: othersCount });
+
+  groups.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `<div class="hi-top"><span>${g.label.replace(/</g, '&lt;')}</span><span>${g.count}</span></div>`;
+    div.addEventListener('click', () => { historyFilter = g.value; renderHistoryView(); });
+    list.appendChild(div);
+  });
+}
+
+function renderInvoiceList(list) {
+  let filtered, title;
+  if (historyFilter === 'ALL') { filtered = history; title = 'All invoices'; }
+  else if (historyFilter === 'OTHERS') { filtered = history.filter(h => !h.toName); title = 'Others (no client)'; }
+  else { filtered = history.filter(h => h.toName === historyFilter); title = historyFilter; }
+
+  const back = document.createElement('div');
+  back.className = 'history-back';
+  back.innerHTML = `<span>&#8592; All clients</span><span class="history-back-title">${title.replace(/</g, '&lt;')}</span>`;
+  back.addEventListener('click', () => { historyFilter = null; renderHistoryView(); });
+  list.appendChild(back);
+
+  filtered.forEach(h => {
     const sub = (h.rows || []).reduce((s, r) => s + r.qty * r.rate, 0);
     const tax = sub * (parseFloat(h.taxRate) || 0) / 100;
     const grand = Math.max(0, sub + tax - (parseFloat(h.discount) || 0));
-    const dateLabel = h.savedAt ? new Date(h.savedAt).toLocaleDateString('id-ID') : '';
     const div = document.createElement('div');
     div.className = 'history-item';
     div.innerHTML = `
       <button class="hi-del" title="Delete">&#x2715;</button>
       <div class="hi-top"><span>${(h.invNumber || 'Untitled').replace(/</g, '&lt;')}</span></div>
       <div class="hi-sub"><span>${(h.toName || 'No client').replace(/</g, '&lt;')}</span><span>${fmtRp(grand)}</span></div>
-      <div class="hi-sub"><span>${dateLabel}</span></div>`;
+      <div class="hi-sub"><span>${fmtHK(h.savedAt)}</span></div>`;
     div.querySelector('.hi-del').addEventListener('click', (e) => { e.stopPropagation(); deleteHistory(h.id); });
     div.addEventListener('click', () => loadHistory(h.id));
     list.appendChild(div);
@@ -550,7 +593,6 @@ async function renderHistory() {
 function loadHistory(id) {
   const h = history.find(x => x.id === id);
   if (!h) return;
-  loadedInvoiceId = id;
   document.getElementById('inv-number').value = h.invNumber || '';
   document.getElementById('inv-date').value = h.invDate || '';
   document.getElementById('due-date').value = h.dueDate || '';
@@ -568,7 +610,7 @@ function loadHistory(id) {
   renderAllRows();
   recalc();
   closeHistory();
-  showToast('Loaded ' + (h.invNumber || 'invoice'));
+  showToast('Loaded ' + (h.invNumber || 'invoice') + ' — editing will save as a new invoice');
 }
 
 async function deleteHistory(id) {
@@ -578,14 +620,16 @@ async function deleteHistory(id) {
     showToast('Could not delete — check your connection');
     return;
   }
-  if (loadedInvoiceId === id) loadedInvoiceId = null;
-  renderHistory();
+  await loadHistoryData();
+  renderHistoryView();
 }
 
-function openHistory() {
+async function openHistory() {
   document.getElementById('history-panel').classList.add('open');
   document.getElementById('history-overlay').classList.add('open');
-  renderHistory();
+  historyFilter = null;
+  await loadHistoryData();
+  renderHistoryView();
 }
 function closeHistory() {
   document.getElementById('history-panel').classList.remove('open');
@@ -600,7 +644,6 @@ function setDefaultDates() {
 }
 
 function newInvoice() {
-  loadedInvoiceId = null;
   document.getElementById('inv-number').value = 'INV-001';
   setDefaultDates();
   document.getElementById('from-name').value = '';
