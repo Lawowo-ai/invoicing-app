@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Invoice App</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAAm0lEQVR4nGMUFBRkoCVgoqnpoxYQA1jwyD179gS/5pcvn4uLSzIwMEhJyeBSg9MHBE2H24FfMRWCCGIHDS3Abwe+OCAIIBGAHxCwYNGiJQSNiIuLwSM79PMBzS1gxFWaEpkP4ABXXhv6kUzzIBr6qWjoW0AgmaJFHSTmsQriAgPtA6yuIykFD1wk46nHSVKMMydTCwz9fDD0LQAAG5gs57jsAbEAAAAASUVORK5CYII=" />
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADLUlEQVR4nO3dQW7bVhRAUaboBjwKGnRpQRYXdGlFAu+iAwMdKL2NItnie8k5Y0v8/L4iZZH6fvf09HTAf/nt7AEwlzhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iD9fvYA/s+XL3+fPYTbPT9/ff/+j+/+2IcPfz5gMLd5N/OL1KuzePH8/PU4jmv6OKYmMvG08hOU8a+XRL5r5i6Pi2PmNN1jbx+z4hg4Qa9iaR+z4viJXdnHKIPimPa6eXXX9DFqEgbF8SvYdfwQx6Mt6kMcJ9jShzjOsaIPcZxmfh/iONPwPsRxssl9iON8Y/sQxwgz+xDHFAP7EMcg0/oQxyyj+hh9m+BqV94DNpkjB0kcJHGQxEESB0kcJHGQxEESB2nxJ6SfP/919hCu8unTx7OHcKOtR44tZRyrhnphaxw8gDhI4iBtjWPRu7xFQ70waGWfUd8hPtGcVX62Hjl4AHGQxEESB0kcJHGQxEESB8kl+ze39xPSrUeOLWUcq4Z6YWscPIA4SFvjWHQiXzTUC67KjuOqLAuIgyQOkjhI4iCJgyQOkjhIrsq+ub2fkG49cmwp41g11Atb4+ABxEHaGseiE/mioV5wVXYcV2VZQBwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHafFSk8d9i+DcsJDQDZtbvVzR4iPHncsj/ejDb9vcnDWcbrA1jleZ9Ouf5J7N7e1jaxw8gDhIW+N4lTd61z/JPZvb+550axzH3ZP+ow+/bXN7yzi2/yn74Klf/Zu+weIjB29NHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdpUBx7b6d7RaMmYVAcTDMrjlGvm8ebtvuz4jjmTdDDDNzxcXEcI6fprc3c5UH/y/5bv8JteTOzeDE6Ds418bTCEOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYP0D+XBn8WftlBoAAAAAElFTkSuQmCC" />
+<meta name="theme-color" content="#111111" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Invoice" />
+<meta name="mobile-web-app-capable" content="yes" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -21,15 +29,16 @@
       --accent: #f0f0f0;
     }
   }
+  html, body { overflow-x: hidden; max-width: 100%; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 32px 16px; }
-  .container { max-width: 780px; margin: 0 auto; }
-  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .container { max-width: 780px; margin: 0 auto; width: 100%; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 12px; }
   .header h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.3px; }
   .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
   .card-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
   .field label { font-size: 12px; color: var(--text2); }
   .field input, .field textarea, .field select {
     width: 100%; padding: 8px 11px; border: 0.5px solid var(--border2);
@@ -37,7 +46,8 @@
     background: var(--bg2); color: var(--text); resize: none; transition: border-color 0.15s;
   }
   .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--text3); }
-  .items-table { width: 100%; border-collapse: collapse; }
+  .table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .items-table { width: 100%; border-collapse: collapse; min-width: 480px; }
   .items-table th { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; text-align: left; padding: 0 8px 10px 0; border-bottom: 0.5px solid var(--border); }
   .items-table th:last-child { text-align: right; padding-right: 0; }
   .items-table td { padding: 7px 8px 7px 0; vertical-align: middle; }
@@ -69,10 +79,10 @@
   }
   .add-row-btn:hover { border-color: var(--text3); color: var(--text); background: var(--bg2); }
   .totals { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; margin-top: 16px; padding-top: 16px; border-top: 0.5px solid var(--border); }
-  .total-row { display: flex; justify-content: space-between; width: 300px; font-size: 14px; color: var(--text2); gap: 24px; }
+  .total-row { display: flex; justify-content: space-between; width: 100%; max-width: 300px; font-size: 14px; color: var(--text2); gap: 24px; }
   .total-row span:last-child { font-weight: 500; color: var(--text); }
   .total-row.grand { font-size: 17px; font-weight: 600; color: var(--text); border-top: 0.5px solid var(--border2); padding-top: 10px; margin-top: 4px; }
-  .tax-row { display: flex; align-items: center; gap: 8px; width: 300px; }
+  .tax-row { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 300px; }
   .tax-row label { font-size: 13px; color: var(--text2); flex: 1; }
   .tax-input { width: 64px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 5px; font-size: 13px; background: var(--bg2); color: var(--text); text-align: right; font-family: inherit; }
   .tax-input:focus { outline: none; }
@@ -91,36 +101,44 @@
   .badge { display: inline-flex; align-items: center; padding: 3px 11px; border-radius: 100px; font-size: 12px; font-weight: 500; background: var(--bg3); color: var(--text2); border: 0.5px solid var(--border); }
 
   /* Modal */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--bg); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 520px; max-height: 80vh; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
   .modal h2 { font-size: 16px; font-weight: 600; }
   .modal-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
   .product-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg2); border-radius: var(--radius-sm); border: 0.5px solid var(--border); }
-  .product-row input { border: none; background: transparent; font-family: inherit; font-size: 14px; color: var(--text); padding: 0; }
+  .product-row input { border: none; background: transparent; font-family: inherit; font-size: 14px; color: var(--text); padding: 0; min-width: 0; }
   .product-row input:focus { outline: none; }
   .product-row .p-name { flex: 1; font-weight: 500; }
-  .product-row .p-price { width: 130px; text-align: right; color: var(--text2); font-size: 13px; }
-  .product-row .p-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 6px; border-radius: 4px; }
+  .product-row .p-price { width: 110px; text-align: right; color: var(--text2); font-size: 13px; }
+  .product-row .p-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 6px; border-radius: 4px; flex-shrink: 0; }
   .product-row .p-del:hover { color: #e53e3e; background: #fff0f0; }
-  .add-product-form { display: flex; gap: 8px; }
-  .add-product-form input { flex: 1; padding: 9px 11px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--bg2); color: var(--text); }
+  .add-product-form { display: flex; gap: 8px; flex-wrap: wrap; }
+  .add-product-form input { flex: 1; min-width: 120px; padding: 9px 11px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--bg2); color: var(--text); }
   .add-product-form input:focus { outline: none; border-color: var(--text3); }
   .add-product-form button { padding: 9px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .modal-footer { display: flex; justify-content: flex-end; }
   .modal-footer button { padding: 9px 20px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: none; font-family: inherit; font-size: 14px; cursor: pointer; color: var(--text); }
   .modal-footer button:hover { background: var(--bg2); }
 
-  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; z-index: 200; }
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; z-index: 200; max-width: calc(100vw - 32px); overflow: hidden; text-overflow: ellipsis; }
   .toast.show { opacity: 1; }
-  .desc-col { min-width: 200px; }
-  .qty-col { width: 60px; }
-  .rate-col { width: 140px; }
-  .amt-col { width: 130px; }
-  .del-col { width: 36px; }
+  .desc-col { min-width: 180px; }
+  .qty-col { width: 55px; }
+  .rate-col { width: 120px; }
+  .amt-col { width: 110px; }
+  .del-col { width: 32px; }
   @media (max-width: 600px) {
+    body { padding: 20px 12px; }
+    .card { padding: 16px; }
     .grid2, .grid3 { grid-template-columns: 1fr; }
     .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .header > div { width: 100%; }
+    .save-btn { flex: 1; justify-content: center; }
+    .manage-btn { flex: 1; justify-content: center; }
+    .desc-col { min-width: 140px; }
+    .rate-col { width: 100px; }
+    .amt-col { width: 90px; }
   }
 </style>
 </head>
@@ -165,18 +183,20 @@
 
   <div class="card">
     <div class="card-title">Line items</div>
-    <table class="items-table">
-      <thead>
-        <tr>
-          <th class="desc-col">Description</th>
-          <th class="qty-col">Qty</th>
-          <th class="rate-col">Rate (Rp)</th>
-          <th class="amt-col" style="text-align:right">Amount</th>
-          <th class="del-col"></th>
-        </tr>
-      </thead>
-      <tbody id="items-body"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="desc-col">Description</th>
+            <th class="qty-col">Qty</th>
+            <th class="rate-col">Rate (Rp)</th>
+            <th class="amt-col" style="text-align:right">Amount</th>
+            <th class="del-col"></th>
+          </tr>
+        </thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
     <button class="add-row-btn" onclick="addRow()">+ Add item</button>
 
     <div class="totals">
@@ -362,7 +382,7 @@ function renderRow(r, tbody) {
       <input class="item-input" type="number" min="0" step="1" value="${r.qty}" oninput="updateRowField(${r.id},'qty',+this.value)" style="width:52px;text-align:right" />
     </td>
     <td class="rate-col">
-      <input class="item-input" type="number" min="0" step="1000" value="${r.rate}" oninput="updateRowField(${r.id},'rate',+this.value)" style="width:130px;text-align:right" />
+      <input class="item-input" type="number" min="0" step="1000" value="${r.rate}" oninput="updateRowField(${r.id},'rate',+this.value)" style="width:100%;text-align:right" />
     </td>
     <td class="amt-col"><span class="item-amount" id="amt-${r.id}">${fmtRp(r.qty * r.rate)}</span></td>
     <td class="del-col"><button class="del-btn" onclick="removeRow(${r.id})" title="Remove">&#x2715;</button></td>`;
