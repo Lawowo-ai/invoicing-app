@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Invoice App</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #ffffff; --bg2: #f7f7f5; --bg3: #f0efe9;
+    --text: #111111; --text2: #666666; --text3: #999999;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --radius: 10px; --radius-sm: 7px; --accent: #111111;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a; --bg2: #242424; --bg3: #2e2e2e;
+      --text: #f0f0f0; --text2: #aaaaaa; --text3: #666666;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --accent: #f0f0f0;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; padding: 32px 16px; }
+  .container { max-width: 780px; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.3px; }
+  .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 14px; }
+  .card-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; color: var(--text2); }
+  .field input, .field textarea, .field select {
+    width: 100%; padding: 8px 11px; border: 0.5px solid var(--border2);
+    border-radius: var(--radius-sm); font-family: inherit; font-size: 14px;
+    background: var(--bg2); color: var(--text); resize: none; transition: border-color 0.15s;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--text3); }
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: 0.06em; text-align: left; padding: 0 8px 10px 0; border-bottom: 0.5px solid var(--border); }
+  .items-table th:last-child { text-align: right; padding-right: 0; }
+  .items-table td { padding: 7px 8px 7px 0; vertical-align: middle; }
+  .items-table td:last-child { text-align: right; padding-right: 0; }
+  .item-select {
+    width: 100%; border: 0.5px solid transparent; border-radius: 5px;
+    padding: 6px 8px; font-family: inherit; font-size: 14px;
+    background: transparent; color: var(--text); cursor: pointer; transition: all 0.15s;
+    appearance: none; -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center;
+    padding-right: 28px;
+  }
+  .item-select:focus { outline: none; border-color: var(--border2); background-color: var(--bg2); }
+  .item-input {
+    width: 100%; border: 0.5px solid transparent; border-radius: 5px;
+    padding: 6px 8px; font-family: inherit; font-size: 14px;
+    background: transparent; color: var(--text); transition: all 0.15s;
+  }
+  .item-input:focus { outline: none; border-color: var(--border2); background: var(--bg2); }
+  .item-amount { font-size: 13px; font-weight: 500; }
+  .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); padding: 5px; border-radius: 5px; display: flex; align-items: center; font-size: 16px; transition: color 0.15s, background 0.15s; }
+  .del-btn:hover { color: #e53e3e; background: #fff0f0; }
+  .add-row-btn {
+    display: flex; align-items: center; gap: 6px; margin-top: 14px;
+    background: none; border: 0.5px dashed var(--border2); border-radius: var(--radius-sm);
+    padding: 9px 14px; font-size: 13px; color: var(--text2); cursor: pointer; width: 100%;
+    justify-content: center; font-family: inherit; transition: all 0.15s;
+  }
+  .add-row-btn:hover { border-color: var(--text3); color: var(--text); background: var(--bg2); }
+  .totals { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; margin-top: 16px; padding-top: 16px; border-top: 0.5px solid var(--border); }
+  .total-row { display: flex; justify-content: space-between; width: 300px; font-size: 14px; color: var(--text2); gap: 24px; }
+  .total-row span:last-child { font-weight: 500; color: var(--text); }
+  .total-row.grand { font-size: 17px; font-weight: 600; color: var(--text); border-top: 0.5px solid var(--border2); padding-top: 10px; margin-top: 4px; }
+  .tax-row { display: flex; align-items: center; gap: 8px; width: 300px; }
+  .tax-row label { font-size: 13px; color: var(--text2); flex: 1; }
+  .tax-input { width: 64px; padding: 5px 8px; border: 0.5px solid var(--border2); border-radius: 5px; font-size: 13px; background: var(--bg2); color: var(--text); text-align: right; font-family: inherit; }
+  .tax-input:focus { outline: none; }
+  .save-btn {
+    display: flex; align-items: center; gap: 8px; padding: 11px 22px;
+    background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+  }
+  .save-btn:hover { opacity: 0.82; }
+  .manage-btn {
+    display: flex; align-items: center; gap: 6px; padding: 9px 16px;
+    background: none; border: 0.5px solid var(--border2); border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text2); cursor: pointer; transition: all 0.15s;
+  }
+  .manage-btn:hover { background: var(--bg2); color: var(--text); }
+  .badge { display: inline-flex; align-items: center; padding: 3px 11px; border-radius: 100px; font-size: 12px; font-weight: 500; background: var(--bg3); color: var(--text2); border: 0.5px solid var(--border); }
+
+  /* Modal */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 520px; max-height: 80vh; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal h2 { font-size: 16px; font-weight: 600; }
+  .modal-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+  .product-row { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--bg2); border-radius: var(--radius-sm); border: 0.5px solid var(--border); }
+  .product-row input { border: none; background: transparent; font-family: inherit; font-size: 14px; color: var(--text); padding: 0; }
+  .product-row input:focus { outline: none; }
+  .product-row .p-name { flex: 1; font-weight: 500; }
+  .product-row .p-price { width: 130px; text-align: right; color: var(--text2); font-size: 13px; }
+  .product-row .p-del { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 6px; border-radius: 4px; }
+  .product-row .p-del:hover { color: #e53e3e; background: #fff0f0; }
+  .add-product-form { display: flex; gap: 8px; }
+  .add-product-form input { flex: 1; padding: 9px 11px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; background: var(--bg2); color: var(--text); }
+  .add-product-form input:focus { outline: none; border-color: var(--text3); }
+  .add-product-form button { padding: 9px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .modal-footer { display: flex; justify-content: flex-end; }
+  .modal-footer button { padding: 9px 20px; border: 0.5px solid var(--border2); border-radius: var(--radius-sm); background: none; font-family: inherit; font-size: 14px; cursor: pointer; color: var(--text); }
+  .modal-footer button:hover { background: var(--bg2); }
+
+  .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 11px 22px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; white-space: nowrap; z-index: 200; }
+  .toast.show { opacity: 1; }
+  .desc-col { min-width: 200px; }
+  .qty-col { width: 60px; }
+  .rate-col { width: 140px; }
+  .amt-col { width: 130px; }
+  .del-col { width: 36px; }
+  @media (max-width: 600px) {
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Invoice</h1>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span class="badge">Draft</span>
+      <button class="manage-btn" onclick="openModal()">&#9881; Manage items</button>
+      <button class="save-btn" onclick="exportPDF()">&#8659; Save as PDF</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Invoice details</div>
+    <div class="grid3">
+      <div class="field"><label>Invoice #</label><input type="text" id="inv-number" value="INV-001" /></div>
+      <div class="field"><label>Issue date</label><input type="date" id="inv-date" /></div>
+      <div class="field"><label>Due date</label><input type="date" id="due-date" /></div>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:14px">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">From</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field"><label>Name / company</label><input type="text" id="from-name" placeholder="Your company" /></div>
+        <div class="field"><label>Email</label><input type="email" id="from-email" placeholder="you@company.com" /></div>
+        <div class="field"><label>Address</label><textarea id="from-addr" rows="2" placeholder="Street, City, Country"></textarea></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-title">Bill to</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="field"><label>Client name</label><input type="text" id="to-name" placeholder="Client name" /></div>
+        <div class="field"><label>Email</label><input type="email" id="to-email" placeholder="client@example.com" /></div>
+        <div class="field"><label>Address</label><textarea id="to-addr" rows="2" placeholder="Street, City, Country"></textarea></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Line items</div>
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th class="desc-col">Description</th>
+          <th class="qty-col">Qty</th>
+          <th class="rate-col">Rate (Rp)</th>
+          <th class="amt-col" style="text-align:right">Amount</th>
+          <th class="del-col"></th>
+        </tr>
+      </thead>
+      <tbody id="items-body"></tbody>
+    </table>
+    <button class="add-row-btn" onclick="addRow()">+ Add item</button>
+
+    <div class="totals">
+      <div class="total-row"><span>Subtotal</span><span id="subtotal">Rp 0</span></div>
+      <div class="tax-row">
+        <label>Tax rate</label>
+        <input class="tax-input" type="number" id="tax-rate" value="0" min="0" max="100" step="0.1" oninput="recalc()" />
+        <span style="font-size:13px;color:var(--text2)">%</span>
+        <span style="flex:1;text-align:right;font-size:14px;font-weight:500" id="tax-amount">Rp 0</span>
+      </div>
+      <div class="total-row">
+        <span>Discount</span>
+        <span style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:13px;color:var(--text2)">Rp</span>
+          <input class="tax-input" type="number" id="discount" value="0" min="0" step="1000" oninput="recalc()" style="width:100px" />
+        </span>
+      </div>
+      <div class="total-row grand"><span>Total due</span><span id="grand-total">Rp 0</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Notes</div>
+    <div class="field">
+      <textarea id="notes" rows="3" placeholder="Payment terms, bank details, thank-you note…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Products Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <h2>&#9881; Manage catalogue</h2>
+    <div class="modal-list" id="product-list"></div>
+    <div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em">Add new item</div>
+      <div class="add-product-form">
+        <input type="text" id="new-prod-name" placeholder="Item name" />
+        <input type="number" id="new-prod-price" placeholder="Price (Rp)" min="0" step="1000" style="width:150px;flex:none" />
+        <button onclick="addProduct()">Add</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button onclick="closeModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Default product catalogue
+let catalogue = [
+  { id: 1, name: 'Consulting (per hour)', price: 500000 },
+  { id: 2, name: 'Design service', price: 1500000 },
+  { id: 3, name: 'Development (per day)', price: 2000000 },
+  { id: 4, name: 'Photography session', price: 3000000 },
+  { id: 5, name: 'Copywriting', price: 750000 },
+];
+let catNextId = 6;
+
+let rows = [], rowId = 0;
+
+function fmtRp(n) {
+  n = Math.max(0, Math.round(n));
+  return 'Rp ' + n.toLocaleString('id-ID');
+}
+function val(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Catalogue modal ──────────────────────────────────────
+function openModal() {
+  renderProductList();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  renderAllRows(); // refresh dropdowns with updated catalogue
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function renderProductList() {
+  const list = document.getElementById('product-list');
+  list.innerHTML = '';
+  if (catalogue.length === 0) {
+    list.innerHTML = '<p style="color:var(--text2);font-size:13px;text-align:center;padding:16px">No items yet. Add one below.</p>';
+    return;
+  }
+  catalogue.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'product-row';
+    row.innerHTML = `
+      <input class="p-name" type="text" value="${p.name.replace(/"/g,'&quot;')}" onchange="updateProduct(${p.id},'name',this.value)" title="Click to edit name" />
+      <input class="p-price" type="number" value="${p.price}" min="0" step="1000" onchange="updateProduct(${p.id},'price',+this.value)" title="Click to edit price" />
+      <button class="p-del" onclick="deleteProduct(${p.id})" title="Remove">&#x2715;</button>`;
+    list.appendChild(row);
+  });
+}
+
+function addProduct() {
+  const name = document.getElementById('new-prod-name').value.trim();
+  const price = parseFloat(document.getElementById('new-prod-price').value) || 0;
+  if (!name) { showToast('Please enter an item name'); return; }
+  catalogue.push({ id: catNextId++, name, price });
+  document.getElementById('new-prod-name').value = '';
+  document.getElementById('new-prod-price').value = '';
+  renderProductList();
+  showToast('Item added to catalogue');
+}
+
+function updateProduct(id, field, value) {
+  const p = catalogue.find(p => p.id === id);
+  if (!p) return;
+  p[field] = value;
+  // update any invoice rows using this product
+  rows.forEach(r => {
+    if (r.catId === id) {
+      if (field === 'name') r.desc = value;
+      if (field === 'price') { r.rate = value; }
+      const el = document.getElementById('amt-' + r.id);
+      if (el) el.textContent = fmtRp(r.qty * r.rate);
+    }
+  });
+  recalc();
+}
+
+function deleteProduct(id) {
+  catalogue = catalogue.filter(p => p.id !== id);
+  renderProductList();
+  // reset any rows using this product
+  rows.forEach(r => { if (r.catId === id) r.catId = null; });
+  renderAllRows();
+  showToast('Item removed');
+}
+
+// ── Invoice rows ─────────────────────────────────────────
+function addRow() {
+  const id = ++rowId;
+  const first = catalogue[0];
+  rows.push({ id, catId: first ? first.id : null, desc: first ? first.name : '', qty: 1, rate: first ? first.price : 0 });
+  renderAllRows();
+  recalc();
+}
+
+function removeRow(id) {
+  rows = rows.filter(r => r.id !== id);
+  renderAllRows();
+  recalc();
+}
+
+function renderAllRows() {
+  const tbody = document.getElementById('items-body');
+  tbody.innerHTML = '';
+  rows.forEach(r => renderRow(r, tbody));
+}
+
+function renderRow(r, tbody) {
+  const tr = document.createElement('tr');
+
+  // Build select options
+  let opts = catalogue.map(p =>
+    `<option value="${p.id}" ${r.catId === p.id ? 'selected' : ''}>${p.name}</option>`
+  ).join('');
+  opts += `<option value="custom" ${r.catId === null ? 'selected' : ''}>— Custom item —</option>`;
+
+  const showCustomInput = r.catId === null;
+
+  tr.innerHTML = `
+    <td class="desc-col">
+      <select class="item-select" onchange="onSelectChange(${r.id}, this.value)">
+        ${opts}
+      </select>
+      ${showCustomInput ? `<input class="item-input" type="text" placeholder="Custom description" value="${r.desc.replace(/"/g,'&quot;')}" oninput="updateRowField(${r.id},'desc',this.value)" style="margin-top:4px" />` : ''}
+    </td>
+    <td class="qty-col">
+      <input class="item-input" type="number" min="0" step="1" value="${r.qty}" oninput="updateRowField(${r.id},'qty',+this.value)" style="width:52px;text-align:right" />
+    </td>
+    <td class="rate-col">
+      <input class="item-input" type="number" min="0" step="1000" value="${r.rate}" oninput="updateRowField(${r.id},'rate',+this.value)" style="width:130px;text-align:right" />
+    </td>
+    <td class="amt-col"><span class="item-amount" id="amt-${r.id}">${fmtRp(r.qty * r.rate)}</span></td>
+    <td class="del-col"><button class="del-btn" onclick="removeRow(${r.id})" title="Remove">&#x2715;</button></td>`;
+  tbody.appendChild(tr);
+}
+
+function onSelectChange(id, value) {
+  const r = rows.find(r => r.id === id);
+  if (!r) return;
+  if (value === 'custom') {
+    r.catId = null; r.desc = ''; r.rate = 0;
+  } else {
+    const p = catalogue.find(p => p.id === parseInt(value));
+    if (p) { r.catId = p.id; r.desc = p.name; r.rate = p.price; }
+  }
+  renderAllRows();
+  recalc();
+}
+
+function updateRowField(id, field, v) {
+  const r = rows.find(r => r.id === id); if (!r) return;
+  r[field] = v;
+  const el = document.getElementById('amt-' + id);
+  if (el) el.textContent = fmtRp(r.qty * r.rate);
+  recalc();
+}
+
+function recalc() {
+  const sub = rows.reduce((s, r) => s + r.qty * r.rate, 0);
+  const taxRate = parseFloat(val('tax-rate')) || 0;
+  const discount = parseFloat(val('discount')) || 0;
+  const tax = sub * taxRate / 100;
+  const grand = Math.max(0, sub + tax - discount);
+  document.getElementById('subtotal').textContent = fmtRp(sub);
+  document.getElementById('tax-amount').textContent = fmtRp(tax);
+  document.getElementById('grand-total').textContent = fmtRp(grand);
+}
+
+// ── PDF Export ───────────────────────────────────────────
+function exportPDF() {
+  if (typeof window.jspdf === 'undefined') { showToast('PDF library loading, try again…'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const mg = 52;
+  let y = 60;
+
+  const sub = rows.reduce((s, r) => s + r.qty * r.rate, 0);
+  const taxRate = parseFloat(val('tax-rate')) || 0;
+  const discount = parseFloat(val('discount')) || 0;
+  const tax = sub * taxRate / 100;
+  const grand = Math.max(0, sub + tax - discount);
+
+  function t(s, x, yy, opts = {}) {
+    doc.setFontSize(opts.size || 11);
+    doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
+    doc.setTextColor(opts.color || '#111111');
+    doc.text(String(s || ''), x, yy, { align: opts.align || 'left' });
+  }
+  function ln(y2, x1 = mg, x2 = W - mg, col = '#dddddd', w = 0.5) {
+    doc.setDrawColor(col); doc.setLineWidth(w); doc.line(x1, y2, x2, y2);
+  }
+
+  const gray = '#888888', muted = '#555555', black = '#111111';
+
+  t('INVOICE', mg, y, { size: 28, bold: true });
+  t(val('inv-number') || 'INV-001', mg, y + 18, { size: 11, color: gray });
+  t('Issue date:', W - mg, y, { size: 10, color: gray, align: 'right' });
+  t(val('inv-date') || '—', W - mg, y + 14, { size: 10, bold: true, align: 'right' });
+  t('Due date:', W - mg, y + 30, { size: 10, color: gray, align: 'right' });
+  t(val('due-date') || '—', W - mg, y + 44, { size: 10, bold: true, align: 'right' });
+
+  y += 68; ln(y, mg, W - mg, black, 1); y += 22;
+
+  const mid = W / 2;
+  t('FROM', mg, y, { size: 9, bold: true, color: gray });
+  t('BILL TO', mid, y, { size: 9, bold: true, color: gray });
+  y += 16;
+  t(val('from-name') || '—', mg, y, { size: 12, bold: true });
+  t(val('to-name') || '—', mid, y, { size: 12, bold: true });
+  y += 16;
+  if (val('from-email')) t(val('from-email'), mg, y, { size: 10, color: muted });
+  if (val('to-email')) t(val('to-email'), mid, y, { size: 10, color: muted });
+  if (val('from-email') || val('to-email')) y += 14;
+  const fa = (val('from-addr') || '').split('\n').filter(Boolean);
+  const ta = (val('to-addr') || '').split('\n').filter(Boolean);
+  const maxA = Math.max(fa.length, ta.length, 1);
+  for (let i = 0; i < maxA; i++) {
+    if (fa[i]) t(fa[i], mg, y, { size: 10, color: muted });
+    if (ta[i]) t(ta[i], mid, y, { size: 10, color: muted });
+    y += 14;
+  }
+
+  y += 14; ln(y, mg, W - mg, black, 1); y += 22;
+
+  const c1 = mg, c2 = mg + 240, c3 = mg + 300, c4 = W - mg;
+  t('DESCRIPTION', c1, y, { size: 9, bold: true, color: gray });
+  t('QTY', c2, y, { size: 9, bold: true, color: gray });
+  t('RATE', c3, y, { size: 9, bold: true, color: gray });
+  t('AMOUNT', c4, y, { size: 9, bold: true, color: gray, align: 'right' });
+  y += 10; ln(y); y += 18;
+
+  rows.forEach(r => {
+    const desc = r.catId !== null ? r.desc : (r.desc || 'Custom item');
+    t(desc, c1, y, { size: 11 });
+    t(String(r.qty), c2, y, { size: 11 });
+    t(fmtRp(r.rate), c3, y, { size: 10 });
+    t(fmtRp(r.qty * r.rate), c4, y, { size: 11, align: 'right' });
+    y += 7; ln(y, mg, W - mg, '#eeeeee'); y += 18;
+  });
+
+  y += 6;
+  const tX = W - mg - 220;
+  function trow(label, amount, bold = false, big = false) {
+    const sz = big ? 13 : 11;
+    const col = bold ? black : muted;
+    t(label, tX, y, { size: sz, bold, color: col });
+    t(amount, W - mg, y, { size: sz, bold, align: 'right', color: col });
+    y += big ? 22 : 18;
+  }
+  trow('Subtotal', fmtRp(sub));
+  if (taxRate > 0) trow(`Tax (${taxRate}%)`, fmtRp(tax));
+  if (discount > 0) trow('Discount', '-' + fmtRp(discount));
+  y += 2; ln(y, tX, W - mg, black, 1); y += 14;
+  trow('Total due', fmtRp(grand), true, true);
+
+  const notes = val('notes');
+  if (notes) {
+    y += 14; ln(y, mg, W - mg, '#eeeeee'); y += 18;
+    t('NOTES', mg, y, { size: 9, bold: true, color: gray }); y += 14;
+    doc.splitTextToSize(notes, W - mg * 2).forEach(l => {
+      t(l, mg, y, { size: 10, color: muted }); y += 14;
+    });
+  }
+
+  const filename = (val('inv-number') || 'invoice') + '.pdf';
+  doc.save(filename);
+  showToast('Downloaded ' + filename);
+}
+
+// ── Init ─────────────────────────────────────────────────
+const today = new Date();
+const iso = d => d.toISOString().split('T')[0];
+const due = new Date(today); due.setDate(due.getDate() + 30);
+document.getElementById('inv-date').value = iso(today);
+document.getElementById('due-date').value = iso(due);
+addRow();
+
+document.getElementById('new-prod-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addProduct();
+});
+</script>
+</body>
+</html>
