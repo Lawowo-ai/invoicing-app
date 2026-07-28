@@ -371,6 +371,39 @@ async function sbDeleteInvoice(id) {
   if (!res.ok) throw new Error('Failed to delete invoice');
 }
 
+async function sbFetchCatalogue() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/catalogue_items?select=*&order=created_at.asc`, { headers: SB_HEADERS });
+  if (!res.ok) throw new Error('Failed to load catalogue');
+  return res.json();
+}
+async function sbInsertCatalogueItem(item) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/catalogue_items`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify(item),
+  });
+  if (!res.ok) throw new Error('Failed to add item');
+  const data = await res.json();
+  return data[0];
+}
+async function sbUpdateCatalogueItem(id, fields) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/catalogue_items?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=representation' },
+    body: JSON.stringify(fields),
+  });
+  if (!res.ok) throw new Error('Failed to update item');
+  const data = await res.json();
+  return data[0];
+}
+async function sbDeleteCatalogueItem(id) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/catalogue_items?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: SB_HEADERS,
+  });
+  if (!res.ok) throw new Error('Failed to delete item');
+}
+
 function snapshotToRow(snap) {
   return {
     inv_number: snap.invNumber,
@@ -409,15 +442,18 @@ function rowToSnapshot(row) {
   };
 }
 
-// Default product catalogue
-let catalogue = [
-  { id: 1, name: 'Consulting (per hour)', price: 500000 },
-  { id: 2, name: 'Design service', price: 1500000 },
-  { id: 3, name: 'Development (per day)', price: 2000000 },
-  { id: 4, name: 'Photography session', price: 3000000 },
-  { id: 5, name: 'Copywriting', price: 750000 },
-];
-let catNextId = 6;
+// Product catalogue — shared via Supabase so it syncs across devices
+let catalogue = [];
+
+async function loadCatalogue() {
+  try {
+    const dbRows = await sbFetchCatalogue();
+    catalogue = dbRows.map(r => ({ id: r.id, name: r.name, price: r.price }));
+  } catch (e) {
+    catalogue = [];
+    showToast('Could not load item catalogue — check your connection');
+  }
+}
 
 let rows = [], rowId = 0;
 
@@ -655,10 +691,13 @@ function newInvoice() {
   showToast('Started a new invoice');
 }
 
-// ── Catalogue modal ──────────────────────────────────────
-function openModal() {
-  renderProductList();
+// ── Catalogue modal (shared via Supabase) ────────────────
+async function openModal() {
   document.getElementById('modal-overlay').classList.add('open');
+  const list = document.getElementById('product-list');
+  list.innerHTML = '<p style="color:var(--text2);font-size:13px;text-align:center;padding:16px">Loading…</p>';
+  await loadCatalogue();
+  renderProductList();
 }
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
@@ -679,28 +718,44 @@ function renderProductList() {
     const row = document.createElement('div');
     row.className = 'product-row';
     row.innerHTML = `
-      <input class="p-name" type="text" value="${p.name.replace(/"/g,'&quot;')}" onchange="updateProduct(${p.id},'name',this.value)" title="Click to edit name" />
-      <input class="p-price" type="number" value="${p.price}" min="0" step="1000" onchange="updateProduct(${p.id},'price',+this.value)" title="Click to edit price" />
-      <button class="p-del" onclick="deleteProduct(${p.id})" title="Remove">&#x2715;</button>`;
+      <input class="p-name" type="text" value="${p.name.replace(/"/g,'&quot;')}" onchange="updateProduct('${p.id}','name',this.value)" title="Click to edit name" />
+      <input class="p-price" type="number" value="${p.price}" min="0" step="1000" onchange="updateProduct('${p.id}','price',+this.value)" title="Click to edit price" />
+      <button class="p-del" onclick="deleteProduct('${p.id}')" title="Remove">&#x2715;</button>`;
     list.appendChild(row);
   });
 }
 
-function addProduct() {
+async function addProduct() {
   const name = document.getElementById('new-prod-name').value.trim();
   const price = parseFloat(document.getElementById('new-prod-price').value) || 0;
   if (!name) { showToast('Please enter an item name'); return; }
-  catalogue.push({ id: catNextId++, name, price });
+  const id = 'item_' + Date.now();
+  try {
+    await sbInsertCatalogueItem({ id, name, price });
+  } catch (e) {
+    showToast('Could not add item — check your connection');
+    return;
+  }
+  catalogue.push({ id, name, price });
   document.getElementById('new-prod-name').value = '';
   document.getElementById('new-prod-price').value = '';
   renderProductList();
   showToast('Item added to catalogue');
 }
 
-function updateProduct(id, field, value) {
+async function updateProduct(id, field, value) {
   const p = catalogue.find(p => p.id === id);
   if (!p) return;
+  const prev = p[field];
   p[field] = value;
+  try {
+    await sbUpdateCatalogueItem(id, { [field]: value });
+  } catch (e) {
+    p[field] = prev;
+    showToast('Could not save — check your connection');
+    renderProductList();
+    return;
+  }
   // update any invoice rows using this product
   rows.forEach(r => {
     if (r.catId === id) {
@@ -713,7 +768,13 @@ function updateProduct(id, field, value) {
   recalc();
 }
 
-function deleteProduct(id) {
+async function deleteProduct(id) {
+  try {
+    await sbDeleteCatalogueItem(id);
+  } catch (e) {
+    showToast('Could not delete — check your connection');
+    return;
+  }
   catalogue = catalogue.filter(p => p.id !== id);
   renderProductList();
   // reset any rows using this product
@@ -778,7 +839,7 @@ function onSelectChange(id, value) {
   if (value === 'custom') {
     r.catId = null; r.desc = ''; r.rate = 0;
   } else {
-    const p = catalogue.find(p => p.id === parseInt(value));
+    const p = catalogue.find(p => p.id === value);
     if (p) { r.catId = p.id; r.desc = p.name; r.rate = p.price; }
   }
   renderAllRows();
@@ -910,7 +971,10 @@ async function exportPDF() {
 // ── Init ─────────────────────────────────────────────────
 const iso = d => d.toISOString().split('T')[0];
 setDefaultDates();
-addRow();
+(async () => {
+  await loadCatalogue();
+  addRow();
+})();
 
 document.getElementById('new-prod-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') addProduct();
